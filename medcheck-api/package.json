@@ -1,0 +1,46 @@
+{
+	"name": "medcheck-api",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"build": "tsc && tsc-alias",
+		"start": "node dist/app.js",
+		"dev": "tsx watch src/app.ts",
+		"lint": "biome check --diagnostic-level=error"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499",
+	"dependencies": {
+		"cors": "2.8.6",
+		"dayjs": "1.11.20",
+		"dotenv": "17.3.1",
+		"express": "5.2.1",
+		"express-rate-limit": "8.3.1",
+		"firebase-admin": "13.7.0",
+		"helmet": "8.1.0",
+		"jsonwebtoken": "9.0.3",
+		"node-cron": "4.2.1",
+		"pdfkit": "0.18.0",
+		"pg": "8.20.0",
+		"redis": "5.12.1",
+		"resend": "6.12.3",
+		"zod": "4.3.6"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.6",
+		"@types/cors": "2.8.19",
+		"@types/express": "5.0.6",
+		"@types/jsonwebtoken": "9.0.10",
+		"@types/node": "25.5.0",
+		"@types/node-cron": "3.0.11",
+		"@types/pdfkit": "0.17.6",
+		"@types/pg": "8.18.0",
+		"nodemon": "3.1.14",
+		"tsc-alias": "1.8.16",
+		"tsx": "4.21.0",
+		"typescript": "5.9.3"
+	}
+}

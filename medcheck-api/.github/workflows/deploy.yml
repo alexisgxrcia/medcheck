@@ -1,0 +1,73 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Package application
+        run: |
+          BUNDLE_PATH="$RUNNER_TEMP/deploy.tar.gz"
+          tar \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=node_modules \
+            --exclude=dist \
+            --exclude=.env \
+            -czf "$BUNDLE_PATH" .
+          cp "$BUNDLE_PATH" deploy.tar.gz
+
+      - name: Upload application bundle
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          port: ${{ secrets.DROPLET_SSH_PORT }}
+          source: deploy.tar.gz
+          target: /tmp
+
+      - name: Deploy to DigitalOcean droplet
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          port: ${{ secrets.DROPLET_SSH_PORT }}
+          script: |
+            set -eu
+            APP_DIR="${{ secrets.APP_DIR }}"
+            BUNDLE_PATH="/tmp/deploy.tar.gz"
+
+            if [ -z "$APP_DIR" ]; then
+              echo "Missing required secret: APP_DIR" >&2
+              exit 1
+            fi
+
+            mkdir -p "$APP_DIR"
+            find "$APP_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+            tar -xzf "$BUNDLE_PATH" -C "$APP_DIR"
+
+            cat <<EOF > "$APP_DIR/.env"
+            NODE_ENV=${{ secrets.NODE_ENV }}
+            PORT=${{ secrets.PORT }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_ID_IOS=${{ secrets.GOOGLE_CLIENT_ID_IOS }}
+            GOOGLE_CLIENT_ID_ANDROID=${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
+            GOOGLE_CLIENT_ID_ANDROID_ALT=${{ secrets.GOOGLE_CLIENT_ID_ANDROID_ALT }}
+            FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            REDIS_URL=${{ secrets.REDIS_URL }}
+            EOF
+
+            cd "$APP_DIR"
+            docker compose up -d --build
+            rm -f "$BUNDLE_PATH"
